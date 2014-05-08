@@ -6,6 +6,8 @@ var siteList;
 
 exports.handleRequest = function (req, res) {
   req.on("data", function(url){
+    url = url.toString();
+    url = url.slice(url.indexOf("w"));
     fetchTxt(req, res, url);
     //res.end(archive.paths.list);
   });
@@ -15,26 +17,66 @@ var fetchTxt = function(request, response, url){
   fs.readFile("../archives/sites.txt", function(err, data){
     if (err) {
       response.writeHeader(404);
-      console.log(err);
-      response.end("File not found");
+      response.end("File not found by fetchTxt");
     } else {
       response.writeHeader(200);
       siteList = data.toString().replace(/\n/g," ").split(" ");
 
       if(searchTxt(url)){
         //fetch html and respond
+        fetchSite(request, response, url);
+        console.log("found");
       }else{
         //send message and go fetch associated html
+        console.log("not found");
+        response.end();
       }
-      response.end();
     }
   });
 };
 
 var searchTxt = function(url){
-  url = url.slice(url.indexOf("w"));
   for (var i=0; i<siteList.length; i++){
     if(siteList[i] === url){return true;}
   }
   return false;
 };
+
+var fetchSite = function(request, response, url){
+  fs.readFile("../archives/sites/"+url, function(err, data){
+    if(err){
+      response.writeHeader(404);
+      console.log("fetchSite failed");
+      response.end();
+    }else{
+      console.log("fetched: ", url);
+      response.writeHeader(200, {"Content-Type": "text/html"});
+      response.write(data);
+      response.end();
+    }
+  });
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

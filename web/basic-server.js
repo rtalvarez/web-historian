@@ -11,7 +11,7 @@ var getIndex = function(request, response, path){
     if (err) {
       response.writeHeader(404);
       console.log(err);
-      response.end("File not found");
+      response.end("File not found by getIndex");
     } else {
       response.writeHeader(200);
       response.write(data);
