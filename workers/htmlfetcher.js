@@ -4,48 +4,103 @@ var httpRequest = require('http-request');
 var _ = require('underscore');
 var archive = require('../helpers/archive-helpers.js');
 var fs = require ('fs');
+var async = require('async');
 var list;
+var fullPathsList = [];
 var archivedSites;
 
-// urls <- content of file
-// reject all urls that we already archived
-// archive all other urls
-//
 // _(getUrls()).reject(isArchived).map(archive);
 // async
 
 var writeSite = function(url, data){
-  fs.writeFile(archive.paths.archivedSites+url, data, function(err){
-    if (err) { console.log(err); }
+  //console.log('writing site: ', data);
+  fs.writeFile(archive.paths.archivedSites+url, data.buffer.toString(), function(err){
+    if (err) { console.log('writing error: ', err); }
   });
 };
 
-fs.readFile(archive.paths.list, function(err, data){
-  if(err){
-    console.log(err);
-  }else{
-    list = data.toString().replace(/\n/g,' ').split(' ');
-    fs.readdir(archive.paths.archivedSites, function(err, files){
-      if(err){
-        console.log(err);
-      }else{
-        archivedSites = files;
-        console.log(archivedSites);
-        for (var i=0; i<list.length; i++){
-          if(!_.indexOf(archivedSites, list[i])){
-            httpRequest.get('http://' + list[i], function(err, res){
-              if (err) {
-                console.log(err);
-              } else {
-               // writeSite(list[i], res.buffer.toString());
-              }
-            });
-          }
-        }
-      }
+var readTextFile = function(callback){
+  fs.readFile(archive.paths.list, function(err, data){
+    if (err) {
+      console.log('File not found by readTextFile');
+    } else {
+      list = data.toString().replace(/\n/g,' ').split(' ');
+      callback(asyncDownloadWrite);
     }
-);}
+  });
+};
 
-});
+var appendToList = function(callback){
+  for(var i=0; i<list.length; i++){
+    fullPathsList[i] = archive.paths.archivedSites +list[i];
+  }
+  console.log(list);
+  callback();
+};
+
+var readArchiveDirectory = function(callback){
+  fs.readdir(archive.paths.archivedSites, function(err, files){
+    if(err){
+      console.log('reading error: ', err);
+    }else{
+      archivedSites = files;
+      callback();
+    }
+  });
+};
+
+var download = function(website){
+  httpRequest.get(website, function(err, data){
+    console.log(website);
+    if(err){
+      console.log('downloading error: ', err);
+    }else{
+      writeSite(website, data);
+    }
+  });
+};
+
+readTextFile(appendToList);
+
+var asyncDownloadWrite = function(){
+  async.reject(fullPathsList, fs.exists, function(results){
+    console.log('filter results: ', results);
+    async.each(results, function(file){
+      var webSite = file.slice(file.indexOf('www'));
+      download(webSite);
+    },
+    function(err){
+      if(err){console.log('filtering error: ', err);}
+    });
+  });
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

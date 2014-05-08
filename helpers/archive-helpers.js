@@ -39,10 +39,11 @@ exports.readListOfUrls = function(request, response, url){
       if(exports.isUrlInList(siteList, url)){
         //fetch html and respond
         fetchSite(request, response, exports.paths.archivedSites+url);
-        console.log("found");
+        console.log('found');
       }else{
+        exports.addUrlToList(url);
         //send message and go fetch associated html
-        console.log("not found");
+        console.log('not found');
         // call addTxt
         fetchSite(request, response, exports.paths.loadingPage);
         //response.write("We have a bot that is working on it");
@@ -76,7 +77,11 @@ exports.isUrlInList = function(siteList, url){
 
 exports.addUrlToList = function(url){
   fs.appendFile(exports.paths.list, '\n'+url, function(err){
-    if (err){ console.log(err); }
+    if (err){
+      console.log(err);
+    }else{
+      console.log('appended file: ', url);
+    }
   });
 };
 
