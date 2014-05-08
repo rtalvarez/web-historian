@@ -24,12 +24,14 @@ var fetchTxt = function(request, response, url){
 
       if(searchTxt(url)){
         //fetch html and respond
-        fetchSite(request, response, url);
+        fetchSite(request, response, "../archives/sites/"+url);
         console.log("found");
       }else{
         //send message and go fetch associated html
         console.log("not found");
-        response.end();
+        // call addTxt
+        fetchSite(request, response, "./public/loading.html");
+        //response.write("We have a bot that is working on it");
       }
     }
   });
@@ -43,7 +45,7 @@ var searchTxt = function(url){
 };
 
 var fetchSite = function(request, response, url){
-  fs.readFile("../archives/sites/"+url, function(err, data){
+  fs.readFile(url, function(err, data){
     if(err){
       response.writeHeader(404);
       console.log("fetchSite failed");
